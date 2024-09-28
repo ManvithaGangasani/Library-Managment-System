@@ -5,13 +5,13 @@ import org.junit.jupiter.api.Test;
 
 public class ReturnBookTest {
 
-    @Test
-    public void testReturnBook() {
-        Library library = new Library();
-        AddBook addBook = new AddBook();
-        BorrowBook borrowBook = new BorrowBook();
-        ReturnBook returnBook = new ReturnBook();
+    Library library = new Library();
+    AddBook addBook = new AddBook();
+    BorrowBook borrowBook = new BorrowBook();
+    ReturnBook returnBook = new ReturnBook();
 
+    @Test
+    public void testReturnBorrowedBook() {
         // Add and borrow a book
         addBook.addBook(library, "1234", "Book One", "Author One", 2000);
         borrowBook.borrowBook(library, "1234");
@@ -20,12 +20,28 @@ public class ReturnBookTest {
         // Return the book
         returnBook.returnBook(library, "1234");
         assertTrue(library.getBooks().get("1234").isAvailable());
+    }
 
-        // Return the book which does not found
-        returnBook.returnBook(library, "1235");
+    @Test
+    public void testReturnBookThatDoesNotExist() {
+        // Try to return a book that does not exist
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            returnBook.returnBook(library, "1235");
+        });
+        assertEquals("Book with ISBN 1235 does not exist to return.", exception.getMessage());
+    }
 
-        // Try to return a book that is already returned (not borrowed)
+    @Test
+    public void testReturnAlreadyReturnedBook() {
+        // Add and borrow a book
+        addBook.addBook(library, "1234", "Book two", "Author One", 2000);
+        borrowBook.borrowBook(library, "1234");
         returnBook.returnBook(library, "1234");
-        assertTrue(library.getBooks().get("1234").isAvailable());
+
+        // Try to return the same book again
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            returnBook.returnBook(library, "1234");
+        });
+        assertEquals("Book with ISBN 1234 is not borrowed to return.", exception.getMessage());
     }
 }
